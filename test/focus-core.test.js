@@ -77,3 +77,23 @@ test("buildPayload 无 editor 时 editor 为 null", () => {
   assert.deepEqual(p.recentEdits, []);
   assert.deepEqual(p.openTabs, []);
 });
+
+test("writeJsonAtomic 写入并可原子覆盖", async () => {
+  const os = require("node:os");
+  const fs = require("node:fs");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
+  const file = path.join(dir, "d--x.json");
+  await core.writeJsonAtomic(file, { a: 1 });
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")), { a: 1 });
+  await core.writeJsonAtomic(file, { a: 2 });
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, "utf8")), { a: 2 });
+  assert.equal(fs.existsSync(file + ".tmp"), false);
+});
+
+test("makeThrottledWriter 合并连续 schedule 并等 flush", async () => {
+  let calls = 0;
+  const w = core.makeThrottledWriter(async () => { calls++; }, 10, 0);
+  w.schedule(); w.schedule(); w.schedule();
+  await w.flush();
+  assert.equal(calls, 1);
+});

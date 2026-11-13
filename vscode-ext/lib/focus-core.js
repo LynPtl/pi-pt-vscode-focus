@@ -83,6 +83,56 @@ function buildPayload(raw, now) {
   };
 }
 
+async function writeJsonAtomic(file, data) {
+  const fs = require("node:fs");
+  const dir = path.dirname(file);
+  await fs.promises.mkdir(dir, { recursive: true });
+  const tmp = file + ".tmp";
+  await fs.promises.writeFile(tmp, JSON.stringify(data), "utf8");
+  await fs.promises.rename(tmp, file);
+}
+
+function makeThrottledWriter(write, debounceMs = 400, minIntervalMs = 1000) {
+  let timer = null;
+  let pending = false;
+  let running = Promise.resolve();
+  let lastWriteAt = 0;
+
+  function delay() {
+    const sinceLast = Date.now() - lastWriteAt;
+    return Math.max(debounceMs, minIntervalMs - sinceLast, 0);
+  }
+
+  async function fire() {
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    if (!pending) return;
+    pending = false;
+    try {
+      await write();
+    } finally {
+      lastWriteAt = Date.now();
+    }
+  }
+
+  return {
+    schedule() {
+      pending = true;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = null;
+        running = fire();
+      }, delay());
+    },
+    async flush() {
+      running = fire();
+      await running;
+    },
+  };
+}
+
 module.exports = {
   SCHEMA,
   focusDir,
@@ -91,4 +141,6 @@ module.exports = {
   findHeading,
   mergeRanges,
   buildPayload,
+  writeJsonAtomic,
+  makeThrottledWriter,
 };
