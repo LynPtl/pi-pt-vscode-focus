@@ -24,6 +24,8 @@ bash install.sh           # 装到 ~/.vscode/extensions 和 ~/.pi/agent/extensio
 DRY_RUN=1 bash install.sh # 只打印目标路径，不落盘
 ```
 
+安装脚本会装进 `~/.vscode/extensions`，并自动检测 `~/.vscode-insiders/extensions`、`~/.cursor/extensions`（存在就一并装）。
+
 路径可用环境变量覆盖：`VSCODE_EXT_DIR`、`PI_CODING_AGENT_DIR`（pi 自己的 agent 目录）；
 焦点 JSON 位置也可用 `PI_FOCUS_DIR` 覆盖。默认位置：
 
