@@ -6,6 +6,8 @@ import path from "node:path";
 
 import vscodeFocus, { focusPath, focusText } from "../pi-ext/vscode-focus.ts";
 
+const core_slug = (folder) => folder.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
 const FOLDER = "D:\\happy-llm";
 
 function writeFocus(payload) {
@@ -25,15 +27,15 @@ function fakePi() {
   return { pi, handlers, tools };
 }
 
-function withLocalAppData(fn) {
+function withFocusDir(fn) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pi-focus-"));
-  const previous = process.env.LOCALAPPDATA;
-  process.env.LOCALAPPDATA = dir;
+  const previous = process.env.PI_FOCUS_DIR;
+  process.env.PI_FOCUS_DIR = dir;
   try {
     return fn(dir);
   } finally {
-    if (previous === undefined) delete process.env.LOCALAPPDATA;
-    else process.env.LOCALAPPDATA = previous;
+    if (previous === undefined) delete process.env.PI_FOCUS_DIR;
+    else process.env.PI_FOCUS_DIR = previous;
   }
 }
 
@@ -55,19 +57,19 @@ function sampleEditor() {
 }
 
 test("file 不存在时 focusText 返回 null", () => {
-  withLocalAppData(() => {
+  withFocusDir(() => {
     assert.equal(focusText(FOLDER, new Date()), null);
   });
 });
 
 test("focusPath 使用 slug 命名", () => {
-  withLocalAppData((dir) => {
-    assert.equal(focusPath(FOLDER), path.join(dir, "pi-focus", "d--happy-llm.json"));
+  withFocusDir((dir) => {
+    assert.equal(focusPath(FOLDER), path.join(dir, String(core_slug(FOLDER)) + ".json"));
   });
 });
 
 test("before_agent_start 注入一次，重复内容不再注入", () => {
-  withLocalAppData(() => {
+  withFocusDir(() => {
     writeFocus(sampleEditor());
     const { pi, handlers } = fakePi();
     vscodeFocus(pi);
@@ -85,7 +87,7 @@ test("before_agent_start 注入一次，重复内容不再注入", () => {
 });
 
 test("压缩之后重新注入一次", () => {
-  withLocalAppData(() => {
+  withFocusDir(() => {
     writeFocus(sampleEditor());
     const { pi, handlers } = fakePi();
     vscodeFocus(pi);
@@ -98,7 +100,7 @@ test("压缩之后重新注入一次", () => {
 });
 
 test("custom 触发的 run 不注入", () => {
-  withLocalAppData(() => {
+  withFocusDir(() => {
     writeFocus(sampleEditor());
     const { pi, handlers } = fakePi();
     vscodeFocus(pi);
@@ -107,7 +109,7 @@ test("custom 触发的 run 不注入", () => {
 });
 
 test("目录不匹配时不注入", () => {
-  withLocalAppData(() => {
+  withFocusDir(() => {
     writeFocus(sampleEditor());
     const { pi, handlers } = fakePi();
     vscodeFocus(pi);
@@ -116,7 +118,7 @@ test("目录不匹配时不注入", () => {
 });
 
 test("vscode_focus 工具返回现场文本，缺失时给出提示", async () => {
-  await withLocalAppData(async () => {
+  await withFocusDir(async () => {
     const { pi, tools } = fakePi();
     vscodeFocus(pi);
     const tool = tools.get("vscode_focus");

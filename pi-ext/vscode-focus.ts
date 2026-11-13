@@ -6,14 +6,24 @@ import { renderFocus } from "./render.mjs";
 
 const NO_FOCUS_TEXT = "未获取到 VS Code 现场（扩展未安装、窗口已关闭，或 pi 不在同一个工作区目录）";
 
-function focusDir(): string {
-  const base = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+export function resolveFocusDir(
+  { platform = process.platform, env = process.env, homedir = os.homedir() }: {
+    platform?: string;
+    env?: Record<string, string | undefined>;
+    homedir?: string;
+  } = {},
+): string {
+  if (env.PI_FOCUS_DIR) return env.PI_FOCUS_DIR;
+  let base: string;
+  if (platform === "win32") base = env.LOCALAPPDATA || path.join(homedir, "AppData", "Local");
+  else if (platform === "darwin") base = path.join(homedir, "Library", "Application Support");
+  else base = env.XDG_STATE_HOME || path.join(homedir, ".local", "state");
   return path.join(base, "pi-focus");
 }
 
 export function focusPath(cwd: string): string {
   const slug = cwd.toLowerCase().replace(/[^a-z0-9]/g, "-");
-  return path.join(focusDir(), `${slug}.json`);
+  return path.join(resolveFocusDir(), `${slug}.json`);
 }
 
 export function readFocusFile(cwd: string): unknown | null {

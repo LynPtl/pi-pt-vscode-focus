@@ -4,6 +4,7 @@ const os = require("node:os");
 const SCHEMA = 1;
 
 function resolveFocusDir({ platform = process.platform, env = process.env, homedir = os.homedir() } = {}) {
+  if (env.PI_FOCUS_DIR) return env.PI_FOCUS_DIR;
   let base;
   if (platform === "win32") base = env.LOCALAPPDATA || path.join(homedir, "AppData", "Local");
   else if (platform === "darwin") base = path.join(homedir, "Library", "Application Support");
