@@ -8,11 +8,31 @@
 VS Code 扩展 ──写──> %LOCALAPPDATA%\pi-focus\<slug>.json ──读──> pi 扩展
 ```
 
+## 要求
+
+- **Node ≥ 22.18**（`node --test` 要能直接跑 `.ts` 里的类型剥离；更老的 Node 会跳过那条交叉测试）
+- **VS Code ≥ 1.80**（用到 `tabGroups` API）
+- **pi** 装在同一个用户下，扩展目录可写
+- Windows / macOS / Linux 均可；**远程 SSH、WSL、dev container 不支持**（扩展写在远端，pi 在本地读不到）
+
 ## 安装
 
+三个平台同一份命令：
+
 ```bash
-bash install.sh
+bash install.sh           # 装到 ~/.vscode/extensions 和 ~/.pi/agent/extensions
+DRY_RUN=1 bash install.sh # 只打印目标路径，不落盘
 ```
+
+路径可用环境变量覆盖：`VSCODE_EXT_DIR`、`PI_CODING_AGENT_DIR`（pi 自己的 agent 目录）；
+焦点 JSON 位置也可用 `PI_FOCUS_DIR` 覆盖。默认位置：
+
+| 平台 | 位置 |
+|---|---|
+| Windows | `%LOCALAPPDATA%\pi-focus\` |
+| macOS | `~/Library/Application Support/pi-focus/` |
+| Linux | `$XDG_STATE_HOME/pi-focus/`（默认 `~/.local/state/pi-focus/`） |
+
 
 然后：
 
@@ -36,7 +56,7 @@ pi 还可以随时调用只读工具 `vscode_focus` 重新确认现场（长任�
 ```bash
 rm -rf ~/.vscode/extensions/pi-vscode-focus-0.1.0
 rm -rf ~/.pi/agent/extensions/vscode-focus
-rm -rf "$LOCALAPPDATA/pi-focus"
+rm -rf "$LOCALAPPDATA/pi-focus"   # macOS/Linux 见上面的默认位置表
 ```
 
 ## 已知限制

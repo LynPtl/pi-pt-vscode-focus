@@ -1,0 +1,13 @@
+{
+  "name": "pi-vscode-focus",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tells the pi coding agent which file you are reading in VS Code, where the cursor is, and what you just changed.",
+  "license": "MIT",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22.18"
+  }
+}
