@@ -127,9 +127,26 @@ function makeThrottledWriter(write, debounceMs = 400, minIntervalMs = 1000) {
       }, delay());
     },
     async flush() {
-      running = fire();
+      running = running.then(() => fire());
       await running;
     },
+  };
+}
+
+function relativize(fsPath, folder) {
+  if (!fsPath || !folder) return undefined;
+  const rel = path.relative(folder, fsPath);
+  if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) return undefined;
+  return rel.split(path.sep).join("\\");
+}
+
+function accumulateEdit(prev, next) {
+  return {
+    path: next.path,
+    ranges: mergeRanges([...(prev ? prev.ranges : []), ...next.ranges]),
+    at: next.at,
+    plus: (prev ? prev.plus : 0) + next.plus,
+    minus: (prev ? prev.minus : 0) + next.minus,
   };
 }
 
@@ -143,4 +160,6 @@ module.exports = {
   buildPayload,
   writeJsonAtomic,
   makeThrottledWriter,
+  relativize,
+  accumulateEdit,
 };

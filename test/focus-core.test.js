@@ -97,3 +97,15 @@ test("makeThrottledWriter 合并连续 schedule 并等 flush", async () => {
   await w.flush();
   assert.equal(calls, 1);
 });
+
+test("relativize 返回反斜杠相对路径，越界返回 undefined", () => {
+  assert.equal(core.relativize("D:\\happy-llm\\docs\\a.md", "D:\\happy-llm"), "docs\\a.md");
+  assert.equal(core.relativize("D:\\other\\a.md", "D:\\happy-llm"), undefined);
+});
+
+test("accumulateEdit 累加区间与行数", () => {
+  const first = core.accumulateEdit(undefined, { path: "a.md", ranges: [[10, 12]], at: 1000, plus: 3, minus: 1 });
+  assert.deepEqual(first, { path: "a.md", ranges: [[10, 12]], at: 1000, plus: 3, minus: 1 });
+  const second = core.accumulateEdit(first, { path: "a.md", ranges: [[13, 14]], at: 2000, plus: 2, minus: 0 });
+  assert.deepEqual(second, { path: "a.md", ranges: [[10, 14]], at: 2000, plus: 5, minus: 1 });
+});

@@ -1,0 +1,15 @@
+{
+  "name": "pi-vscode-focus",
+  "displayName": "pi VS Code Focus",
+  "description": "Writes the active editor focus (file, cursor, selection, heading, recent edits) to %LOCALAPPDATA%\\pi-focus for the pi coding agent.",
+  "version": "0.1.0",
+  "publisher": "ptlan",
+  "license": "MIT",
+  "engines": {
+    "vscode": ">=1.80.0"
+  },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ]
+}
