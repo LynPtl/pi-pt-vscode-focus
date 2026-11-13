@@ -3,9 +3,16 @@ const os = require("node:os");
 
 const SCHEMA = 1;
 
-function focusDir() {
-  const base = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+function resolveFocusDir({ platform = process.platform, env = process.env, homedir = os.homedir() } = {}) {
+  let base;
+  if (platform === "win32") base = env.LOCALAPPDATA || path.join(homedir, "AppData", "Local");
+  else if (platform === "darwin") base = path.join(homedir, "Library", "Application Support");
+  else base = env.XDG_STATE_HOME || path.join(homedir, ".local", "state");
   return path.join(base, "pi-focus");
+}
+
+function focusDir() {
+  return resolveFocusDir();
 }
 
 function slugForFolder(folder) {
@@ -152,6 +159,7 @@ function accumulateEdit(prev, next) {
 
 module.exports = {
   SCHEMA,
+  resolveFocusDir,
   focusDir,
   slugForFolder,
   focusFile,

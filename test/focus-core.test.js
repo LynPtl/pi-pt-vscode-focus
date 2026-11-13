@@ -109,3 +109,23 @@ test("accumulateEdit 累加区间与行数", () => {
   const second = core.accumulateEdit(first, { path: "a.md", ranges: [[13, 14]], at: 2000, plus: 2, minus: 0 });
   assert.deepEqual(second, { path: "a.md", ranges: [[10, 14]], at: 2000, plus: 5, minus: 1 });
 });
+
+test("resolveFocusDir 三平台规则", () => {
+  const path = require("node:path");
+  assert.equal(
+    core.resolveFocusDir({ platform: "win32", env: { LOCALAPPDATA: "C:\L" }, homedir: "H" }),
+    path.join("C:\L", "pi-focus"),
+  );
+  assert.equal(
+    core.resolveFocusDir({ platform: "darwin", env: {}, homedir: "H" }),
+    path.join("H", "Library", "Application Support", "pi-focus"),
+  );
+  assert.equal(
+    core.resolveFocusDir({ platform: "linux", env: { XDG_STATE_HOME: "/xdg" }, homedir: "H" }),
+    path.join("/xdg", "pi-focus"),
+  );
+  assert.equal(
+    core.resolveFocusDir({ platform: "linux", env: {}, homedir: "H" }),
+    path.join("H", ".local", "state", "pi-focus"),
+  );
+});
