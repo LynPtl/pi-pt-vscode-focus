@@ -139,6 +139,42 @@ test("webview 场景仍报出文件，并沿用上次光标", async () => {
   assert.equal(json.editor.line, 3);
 });
 
+test("无 uri 的 webview 不猜上一个文件", async () => {
+  for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
+  process.env.LOCALAPPDATA = dir;
+
+  const document = doc(path.join(FOLDER, "docs", "a.md"), "# t\\n正文");
+  const activeTab = { isActive: true, input: { uri: { fsPath: document.uri.fsPath } } };
+  const fake = makeFake({ activeTextEditor: editor(document, 1, 0), activeTab, tabs: [activeTab] });
+  const ext = load(fake);
+  const context = { subscriptions: [] };
+  ext.activate(context);
+  await flush(ext);
+  assert.equal(focusJson(dir).editor.path, "docs\\a.md");
+
+  fake.window.activeTextEditor = undefined;
+  activeTab.input = { viewType: "workbench.view.settings" };
+  LISTENERS.tabs.forEach((fn) => fn());
+  await flush(ext);
+  assert.equal(focusJson(dir).editor, null);
+});
+
+test("工作区外的文件用绝对路径报出", async () => {
+  for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
+  process.env.LOCALAPPDATA = dir;
+
+  const outside = "D:\elsewhere\notes.md";
+  const document = doc(outside, "# t\\n正文");
+  const activeTab = { isActive: true, input: { uri: { fsPath: outside } } };
+  const ext = load(makeFake({ activeTextEditor: editor(document, 0, 0), activeTab, tabs: [activeTab] }));
+  const context = { subscriptions: [] };
+  ext.activate(context);
+  await flush(ext);
+  assert.equal(focusJson(dir).editor.path, outside);
+});
+
 test("最近改动被记录并合并区间", async () => {
   for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));

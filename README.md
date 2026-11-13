@@ -50,7 +50,7 @@ rm -rf "$LOCALAPPDATA/pi-focus"
 ## 开发
 
 ```bash
-node --test          # 28 条测试，不需要 VS Code
+node --test          # 31 条测试，不需要 VS Code
 ```
 
 - `vscode-ext/lib/focus-core.js` — 纯逻辑（slug、小节查找、区间合并、payload、原子写、节流）

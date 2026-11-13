@@ -17,7 +17,6 @@ function activate(context) {
 
   const state = {
     recentEdits: new Map(),
-    lastFsPath: undefined,
     lastText: undefined,
   };
 
@@ -45,22 +44,27 @@ function activate(context) {
         editorKind = "text";
       }
     }
-    if (!fsPath) fsPath = state.lastFsPath;
-    if (fsPath) state.lastFsPath = fsPath;
+    if (!fsPath) {
+      // A webview tab with no uri (Settings, Marketplace, Welcome) does not say
+      // which file it shows. Reporting the previous file would be a guess, so
+      // report nothing instead.
+      fsPath = undefined;
+    }
 
     const relPath = core.relativize(fsPath, folder);
+    const displayPath = relPath !== undefined ? relPath : fsPath;
     let editor = null;
 
-    if (relPath) {
+    if (displayPath) {
       const doc = vscode.workspace.textDocuments.find((d) => d.uri && d.uri.fsPath === fsPath);
-      editor = { path: relPath, editorKind, dirty: doc ? doc.isDirty === true : false };
+      editor = { path: displayPath, editorKind, dirty: doc ? doc.isDirty === true : false };
       if (doc && doc.languageId) editor.languageId = doc.languageId;
 
       const cursor = editorKind === "text" ? readCursor(activeEditor, doc) : undefined;
       if (cursor) {
-        state.lastText = { path: relPath, ...cursor };
+        state.lastText = { path: displayPath, ...cursor };
         Object.assign(editor, cursor);
-      } else if (state.lastText && state.lastText.path === relPath) {
+      } else if (state.lastText && state.lastText.path === displayPath) {
         const { path: _ignored, ...rest } = state.lastText;
         Object.assign(editor, rest);
         editor.editorKind = "webview";

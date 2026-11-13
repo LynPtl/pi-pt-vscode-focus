@@ -35,6 +35,12 @@ export default function vscodeFocus(pi: ExtensionAPI): void {
     lastText = null;
   });
 
+  // A compaction can drop the injected block from the transcript while
+  // `lastText` still remembers it, which would suppress every later injection.
+  pi.on("session_compact", () => {
+    lastText = null;
+  });
+
   pi.on("before_agent_start", (event, ctx) => {
     if (event.messageType === "custom") return undefined;
     const text = focusText(ctx.cwd);
@@ -50,7 +56,7 @@ export default function vscodeFocus(pi: ExtensionAPI): void {
     label: "VS Code Focus",
     description:
       "读取用户此刻在 VS Code 中的活动文件、光标、选区、所在小节与最近改动。每轮对话已自动注入一次；任务中途需要确认现场时再调用。",
-    parameters: { type: "object", properties: {}, additionalProperties: false } as never,
+    parameters: { type: "object", properties: {}, additionalProperties: false } as any,
     readOnlyHint: true,
     async execute(_toolCallId: string, _params: unknown, _signal: unknown, _onUpdate: unknown, ctx?: { cwd?: string }) {
       const cwd = ctx && ctx.cwd ? ctx.cwd : process.cwd();

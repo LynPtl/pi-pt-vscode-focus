@@ -84,6 +84,19 @@ test("before_agent_start 注入一次，重复内容不再注入", () => {
   });
 });
 
+test("压缩之后重新注入一次", () => {
+  withLocalAppData(() => {
+    writeFocus(sampleEditor());
+    const { pi, handlers } = fakePi();
+    vscodeFocus(pi);
+    const start = handlers.get("before_agent_start");
+    assert.ok(start({ messageType: "user" }, { cwd: FOLDER }).message);
+    assert.equal(start({ messageType: "user" }, { cwd: FOLDER }), undefined);
+    handlers.get("session_compact")({}, { cwd: FOLDER });
+    assert.ok(start({ messageType: "user" }, { cwd: FOLDER }).message);
+  });
+});
+
 test("custom 触发的 run 不注入", () => {
   withLocalAppData(() => {
     writeFocus(sampleEditor());
