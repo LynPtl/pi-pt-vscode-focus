@@ -98,9 +98,11 @@ test("makeThrottledWriter 合并连续 schedule 并等 flush", async () => {
   assert.equal(calls, 1);
 });
 
-test("relativize 返回反斜杠相对路径，越界返回 undefined", () => {
-  assert.equal(core.relativize("D:\\happy-llm\\docs\\a.md", "D:\\happy-llm"), "docs\\a.md");
-  assert.equal(core.relativize("D:\\other\\a.md", "D:\\happy-llm"), undefined);
+test("relativize 返回本机分隔符的相对路径，越界返回 undefined", () => {
+  const os = require("node:os");
+  const ws = path.join(os.tmpdir(), "ws");
+  assert.equal(core.relativize(path.join(ws, "docs", "a.md"), ws), path.join("docs", "a.md"));
+  assert.equal(core.relativize(path.join(os.tmpdir(), "other", "a.md"), ws), undefined);
 });
 
 test("accumulateEdit 累加区间与行数", () => {

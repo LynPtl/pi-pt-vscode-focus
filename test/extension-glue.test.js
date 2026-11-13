@@ -8,7 +8,7 @@ const os = require("node:os");
 const path = require("node:path");
 const Module = require("node:module");
 
-const FOLDER = "D:\\happy-llm";
+const FOLDER = path.join(os.tmpdir(), "pf-ws");
 const LISTENERS = {
   activeTextEditor: [],
   selection: [],
@@ -77,13 +77,14 @@ async function flush(ext) {
 }
 
 function focusJson(dir) {
-  return JSON.parse(fs.readFileSync(path.join(dir, "pi-focus", "d--happy-llm.json"), "utf8"));
+  const slug = FOLDER.toLowerCase().replace(/[^a-z0-9]/g, "-");
+  return JSON.parse(fs.readFileSync(path.join(dir, slug + ".json"), "utf8"));
 }
 
 test("文本编辑器场景写入文件、光标、选区、小节、tabs", async () => {
   for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
-  process.env.LOCALAPPDATA = dir;
+  process.env.PI_FOCUS_DIR = dir;
 
   const text = "# 章\n\n## 2.1 注意力机制\n正文\n### 2.1.2 深入理解注意力机制\n正文";
   const document = doc(path.join(FOLDER, "docs", "a.md"), text, { dirty: true });
@@ -115,7 +116,7 @@ test("文本编辑器场景写入文件、光标、选区、小节、tabs", asyn
 test("webview 场景仍报出文件，并沿用上次光标", async () => {
   for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
-  process.env.LOCALAPPDATA = dir;
+  process.env.PI_FOCUS_DIR = dir;
 
   const document = doc(path.join(FOLDER, "docs", "a.md"), "# t\n正文\n## 小节\n正文");
   const activeTextEditor = editor(document, 2, 1);
@@ -142,7 +143,7 @@ test("webview 场景仍报出文件，并沿用上次光标", async () => {
 test("无 uri 的 webview 不猜上一个文件", async () => {
   for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
-  process.env.LOCALAPPDATA = dir;
+  process.env.PI_FOCUS_DIR = dir;
 
   const document = doc(path.join(FOLDER, "docs", "a.md"), "# t\\n正文");
   const activeTab = { isActive: true, input: { uri: { fsPath: document.uri.fsPath } } };
@@ -163,9 +164,9 @@ test("无 uri 的 webview 不猜上一个文件", async () => {
 test("工作区外的文件用绝对路径报出", async () => {
   for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
-  process.env.LOCALAPPDATA = dir;
+  process.env.PI_FOCUS_DIR = dir;
 
-  const outside = "D:\elsewhere\notes.md";
+  const outside = path.join(os.tmpdir(), "elsewhere", "notes.md");
   const document = doc(outside, "# t\\n正文");
   const activeTab = { isActive: true, input: { uri: { fsPath: outside } } };
   const ext = load(makeFake({ activeTextEditor: editor(document, 0, 0), activeTab, tabs: [activeTab] }));
@@ -178,7 +179,7 @@ test("工作区外的文件用绝对路径报出", async () => {
 test("最近改动被记录并合并区间", async () => {
   for (const key of Object.keys(LISTENERS)) LISTENERS[key].length = 0;
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "pf-"));
-  process.env.LOCALAPPDATA = dir;
+  process.env.PI_FOCUS_DIR = dir;
 
   const document = doc(path.join(FOLDER, "docs", "a.md"), "x");
   const activeTab = { isActive: true, input: { uri: { fsPath: document.uri.fsPath } } };

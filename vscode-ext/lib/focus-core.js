@@ -145,7 +145,7 @@ function relativize(fsPath, folder) {
   if (!fsPath || !folder) return undefined;
   const rel = path.relative(folder, fsPath);
   if (!rel || rel.startsWith("..") || path.isAbsolute(rel)) return undefined;
-  return rel.split(path.sep).join("\\");
+  return rel.split(/[\/]/).join(path.sep);
 }
 
 function accumulateEdit(prev, next) {
